@@ -101,11 +101,8 @@ class SVMSGDClassifier(BaseEstimator, ClassifierMixin):
         return predictions
 
 
-    def score(self, X, y):
-        print(y)
-        print(np.array(self.predict(X)).shape)
-        print(X.shape)
-        return ( (np.count_nonzero(y == np.array(self.predict(X)))) / X.shape[0] )
+    # def score(self, X, y):
+    #     return ( (np.count_nonzero(y == np.array(self.predict(X)))) / X.shape[0] )
 
 
 if __name__ == "__main__":
