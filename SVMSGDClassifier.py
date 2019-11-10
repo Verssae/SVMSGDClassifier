@@ -16,51 +16,6 @@ from sklearn.model_selection import cross_val_score, StratifiedKFold, GridSearch
 from sklearn.pipeline import Pipeline
 
 
-# class SVMSGDClassifier(BaseEstimator, ClassifierMixin):
-#     def __init__(self, C=1, eta=0.001, batch_size=1, max_epoch=1000, random_state=1):
-#         args, _, _, values = inspect.getargvalues(inspect.currentframe())
-#         values.pop("self")
-#         for arg, val in values.items():
-#             setattr(self, arg, val)
-
-#     def fit(self, X, y=None):
-#         y = np.where(y==0, -1, 1)
-#         r_gen = np.random.RandomState(self.random_state)
-#         self.w_ = r_gen.normal(loc=0.0, scale=0.1, size=1 + X.shape[1])
-#         self.b_, self.w_ = self.w_[0], self.w_[1:]
-#         for e in range(self.max_epoch):
-#             batch_index = np.random.choice(
-#                 [i for i in range(X.shape[0])], size=self.batch_size, replace=False)
-#             gradient_w = []
-#             gradient_b = []
-#             for xi, yi in zip(X[batch_index], y[batch_index]):
-#                 if yi * (np.dot(self.w_,xi)+self.b_) < 1:
-#                     gradient_w.append( -1 * yi * xi + (1/self.C) * self.w_)
-#                     gradient_b.append(-1 * yi)
-#                 else:
-#                     gradient_w.append((1/self.C) * self.w_)
-#                     gradient_b.append(0)
-
-#             gradient_w = np.array(gradient_w)
-#             gradient_b = np.array(gradient_b)
-#             gradient_w = (gradient_w.sum(axis=0)) / self.batch_size
-#             gradient_b = (gradient_b.sum(axis=0)) /self.batch_size
-            
-#             self.w_ = self.w_ -1 * self.eta * gradient_w
-#             self.b_ = self.b_ -1 * self.eta * gradient_b
-
-#         return self
-
-#     def decision_function(self, X):
-
-#         return np.dot(X, self.w_) + self.b_
-
-#     def predict(self, X):
-#         return np.sign(self.decision_function(X))
-
-#     def score(self, X, y):
-#         return ( (np.count_nonzero(y == self.predict(X))) / X.shape[0] )
-
 class BinarySVMSGDClassifier(BaseEstimator, ClassifierMixin):
     def __init__(self, C=1, eta=0.001, batch_size=1, max_epoch=1000, random_state=1):
         args, _, _, values = inspect.getargvalues(inspect.currentframe())
@@ -69,7 +24,7 @@ class BinarySVMSGDClassifier(BaseEstimator, ClassifierMixin):
             setattr(self, arg, val)
 
     def fit(self, X, y=None):
-        y = np.where(y==0, -1, 1)
+        # y = np.where(y==0, -1, 1)
         r_gen = np.random.RandomState(self.random_state)
         self.w_ = r_gen.normal(loc=0.0, scale=0.1, size=1 + X.shape[1])
         self.b_, self.w_ = self.w_[0], self.w_[1:]
@@ -104,6 +59,7 @@ class BinarySVMSGDClassifier(BaseEstimator, ClassifierMixin):
         return np.sign(self.decision_function(X))
 
     def score(self, X, y):
+        print(X.shape[0])
         return ( (np.count_nonzero(y == self.predict(X))) / X.shape[0] )
 
 class SVMSGDClassifier(BaseEstimator, ClassifierMixin):
@@ -134,28 +90,31 @@ class SVMSGDClassifier(BaseEstimator, ClassifierMixin):
             hyper_planes.append(self.clfs_per_classs_[i].decision_function(X))
 
         hyper_planes = np.array(hyper_planes)
-        n_class, n_samples = hyper_planes.shape
+        # n_class, n_samples = hyper_planes.shape
+        n_samples = X.shape[0]
         predictions = []
         for sample in range(n_samples):
             p = hyper_planes[:,sample]
             idx = np.argmax(p)
             predictions.append(self.classes_[idx])
-        print(predictions)
+        # print(predictions)
         return predictions
 
 
     def score(self, X, y):
         print(y)
-        return ( (np.count_nonzero(y == self.predict(X))) / X.shape[0] )
+        print(np.array(self.predict(X)).shape)
+        print(X.shape)
+        return ( (np.count_nonzero(y == np.array(self.predict(X)))) / X.shape[0] )
 
 
 if __name__ == "__main__":
 
     X, Y = make_classification(n_classes=3,n_samples=1000, n_informative=18, n_features=20)
-    clf = OneVsRestClassifier(BinarySVMSGDClassifier(max_epoch=1000, batch_size=30))
+    # clf = OneVsRestClassifier(BinarySVMSGDClassifier(max_epoch=1000, batch_size=30))
     # normal = Normalizer()
     # print(clf)
-    print(clf.fit(X,Y).score(X,Y))
+    # print(clf.fit(X,Y).score(X,Y))
     print(SVMSGDClassifier(max_epoch=1000,batch_size=30).fit(X,Y).score(X, Y))
     # pipeline = Pipeline(
     #     [ ('transf', normal),('estimator', OneVsRestClassifier(BinarySVMSGDClassifier(), n_jobs=-1))])
