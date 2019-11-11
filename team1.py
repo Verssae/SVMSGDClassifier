@@ -5,9 +5,6 @@ import pandas as pd
 import numpy as np
 from SVMSGDClassifier import SVMSGDClassifier
 from sklearn import metrics
-from sklearn.preprocessing import Normalizer, StandardScaler
-from sklearn.model_selection import cross_val_score, StratifiedKFold, GridSearchCV, cross_validate
-from sklearn.pipeline import Pipeline
 from sklearn.base import BaseEstimator, ClassifierMixin
 
 class BinarySVMSGDClassifier(BaseEstimator, ClassifierMixin):
@@ -19,7 +16,6 @@ class BinarySVMSGDClassifier(BaseEstimator, ClassifierMixin):
         self.random_state = random_state
 
     def fit(self, X, y=None):
-        # y = np.where(y==0, -1, 1)
         r_gen = np.random.RandomState(self.random_state)
         self.w_ = r_gen.normal(loc=0.0, scale=0.1, size=1 + X.shape[1])
         self.b_, self.w_ = self.w_[0], self.w_[1:]
@@ -47,15 +43,10 @@ class BinarySVMSGDClassifier(BaseEstimator, ClassifierMixin):
         return self
 
     def decision_function(self, X):
-        # print((np.dot(X, self.w_) + self.b_).shape)
         return np.dot(X, self.w_) + self.b_
 
     def predict(self, X):
         return np.sign(self.decision_function(X))
-
-    def score(self, X, y):
-        print(X.shape[0])
-        return ( (np.count_nonzero(y == self.predict(X))) / X.shape[0] )
 
 class SVMSGDClassifier(BaseEstimator, ClassifierMixin):
     def __init__(self, C=1, eta=0.001, batch_size=1, max_epoch=1000, random_state=1):
