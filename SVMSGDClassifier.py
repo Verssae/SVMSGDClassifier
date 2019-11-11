@@ -17,11 +17,12 @@ from sklearn.pipeline import Pipeline
 
 
 class BinarySVMSGDClassifier(BaseEstimator, ClassifierMixin):
-    def __init__(self, C=1, eta=0.001, batch_size=1, max_epoch=1000, random_state=1):
-        args, _, _, values = inspect.getargvalues(inspect.currentframe())
-        values.pop("self")
-        for arg, val in values.items():
-            setattr(self, arg, val)
+    def __init__(self, C=1, eta=0.01, batch_size=1, max_epoch=1000, random_state=1):
+        self.C = C
+        self.eta = eta
+        self.batch_size = batch_size
+        self.max_epoch = max_epoch
+        self.random_state = random_state
 
     def fit(self, X, y=None):
         # y = np.where(y==0, -1, 1)
@@ -64,10 +65,6 @@ class BinarySVMSGDClassifier(BaseEstimator, ClassifierMixin):
 
 class SVMSGDClassifier(BaseEstimator, ClassifierMixin):
     def __init__(self, C=1, eta=0.001, batch_size=1, max_epoch=1000, random_state=1):
-        # args, _, _, values = inspect.getargvalues(inspect.currentframe())
-        # values.pop("self")
-        # for arg, val in values.items():
-        #     setattr(self, arg, val)
         self.C = C
         self.eta = eta
         self.batch_size = batch_size
@@ -80,7 +77,6 @@ class SVMSGDClassifier(BaseEstimator, ClassifierMixin):
         
         for pos in self.classes_:
             Y = np.where(y==pos, 1, -1)
-            # print(Y)
             self.clfs_per_classs_.append(BinarySVMSGDClassifier(self.C, self.eta,self.batch_size,self.max_epoch,self.random_state).fit(X,Y))
         return self
 
@@ -90,19 +86,14 @@ class SVMSGDClassifier(BaseEstimator, ClassifierMixin):
             hyper_planes.append(self.clfs_per_classs_[i].decision_function(X))
 
         hyper_planes = np.array(hyper_planes)
-        # n_class, n_samples = hyper_planes.shape
         n_samples = X.shape[0]
         predictions = []
         for sample in range(n_samples):
             p = hyper_planes[:,sample]
             idx = np.argmax(p)
             predictions.append(self.classes_[idx])
-        # print(predictions)
         return predictions
 
-
-    # def score(self, X, y):
-    #     return ( (np.count_nonzero(y == np.array(self.predict(X)))) / X.shape[0] )
 
 
 if __name__ == "__main__":
