@@ -6,9 +6,10 @@ import numpy as np
 from SVMSGDClassifier import SVMSGDClassifier
 from sklearn import metrics
 from sklearn.base import BaseEstimator, ClassifierMixin
+import random
 
 class BinarySVMSGDClassifier(BaseEstimator, ClassifierMixin):
-    def __init__(self, C=1, eta=0.01, batch_size=1, max_epoch=1000, random_state=1):
+    def __init__(self, C=1, eta=0.001, batch_size=1, max_epoch=1000, random_state=1):
         self.C = C
         self.eta = eta
         self.batch_size = batch_size
@@ -20,25 +21,31 @@ class BinarySVMSGDClassifier(BaseEstimator, ClassifierMixin):
         self.w_ = r_gen.normal(loc=0.0, scale=0.1, size=1 + X.shape[1])
         self.b_, self.w_ = self.w_[0], self.w_[1:]
         for e in range(self.max_epoch):
-            batch_index = np.random.choice(
-                [i for i in range(X.shape[0])], size=self.batch_size, replace=False)
-            gradient_w = []
-            gradient_b = []
-            for xi, yi in zip(X[batch_index], y[batch_index]):
-                if yi * (np.dot(self.w_,xi)+self.b_) < 1:
-                    gradient_w.append( -1 * yi * xi + (1/self.C) * self.w_)
-                    gradient_b.append(-1 * yi)
-                else:
-                    gradient_w.append((1/self.C) * self.w_)
-                    gradient_b.append(0)
+            print(f'epoch: ${e}')
+            # batch_index = np.random.choice(
+            #     [i for i in range(X.shape[0])], size=self.batch_size, replace=False)
+            n_batches = X.shape[0] // self.batch_size
+            idx = [i for i in range(X.shape[0])]
+            random.shuffle(idx)
+            for j in range(1, n_batches+1):
+                batch_index = idx[(j-1)*self.batch_size:j*self.batch_size]
+                gradient_w = []
+                gradient_b = []
+                for xi, yi in zip(X[batch_index], y[batch_index]):
+                    if yi * (np.dot(self.w_,xi)+self.b_) < 1:
+                        gradient_w.append( -1 * yi * xi + (1/self.C) * self.w_)
+                        gradient_b.append(-1 * yi)
+                    else:
+                        gradient_w.append((1/self.C) * self.w_)
+                        gradient_b.append(0)
 
-            gradient_w = np.array(gradient_w)
-            gradient_b = np.array(gradient_b)
-            gradient_w = (gradient_w.sum(axis=0)) / self.batch_size
-            gradient_b = (gradient_b.sum(axis=0)) /self.batch_size
-            
-            self.w_ = self.w_ -1 * self.eta * gradient_w
-            self.b_ = self.b_ -1 * self.eta * gradient_b
+                gradient_w = np.array(gradient_w)
+                gradient_b = np.array(gradient_b)
+                gradient_w = (gradient_w.sum(axis=0)) / self.batch_size
+                gradient_b = (gradient_b.sum(axis=0)) /self.batch_size
+                
+                self.w_ = self.w_ -1 * self.eta * gradient_w
+                self.b_ = self.b_ -1 * self.eta * gradient_b
 
         return self
 
@@ -144,14 +151,14 @@ def main():
         Y.append(train[i][0])
     X = np.array(X)
     Y = np.array(Y)
-
+    clf  = SVMSGDClassifier(C=100, max_epoch=500, batch_size=256)
     if (tt == "D3"):
         test = list(read_only_img())
         X_test=[]
         for i in range(np.array(test).shape[0]):
             X_test.append(np.ravel(test[i][1]))
         X_test = np.array(X_test)
-        clf  = SVMSGDClassifier(C=100, max_epoch=1000, batch_size=32)
+        
         Y_pred = clf.fit(X,Y).predict(X_test)
         file = open('./prediction.txt','w')
         for i in Y_pred:
@@ -167,7 +174,6 @@ def main():
             Y_true.append(np.ravel(test[i][0]))
         X_test = np.array(X_test)
         Y_true = np.array(Y_true)
-        clf  = SVMSGDClassifier(C=100, max_epoch=1000, batch_size=32)
         Y_pred = clf.fit(X,Y).predict(X_test)
         print(metrics.f1_score(Y_true,Y_pred,average='macro'))
     
