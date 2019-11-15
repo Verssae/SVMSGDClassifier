@@ -51,7 +51,7 @@ class BinarySVMSGDClassifier(BaseEstimator, ClassifierMixin):
                 self.w_ = self.w_ - 1 * self.eta * gradient_w
                 self.b_ = self.b_ - 1 * self.eta * gradient_b
 
-                if e >= self.max_epoch * 0.9:
+                if e == self.max_epoch -1:
                     loss = self._get_hinge_loss(X, y)
                     if self.losses_ == []:
                         best_w = self.w_
